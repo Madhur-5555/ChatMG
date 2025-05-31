@@ -1,46 +1,106 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Local Chatbot</title>
+  <title>MKS Hugging Face Chatbot</title>
   <style>
-    body { font-family: sans-serif; margin: 20px; }
-    #chat { max-width: 600px; margin: auto; }
-    .msg { padding: 10px; margin: 5px; border-radius: 5px; }
-    .user { background: #ffd54f; text-align: right; }
-    .bot { background: #c8e6c9; text-align: left; }
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(to right, #ffb347, #ffcc33);
+      margin: 0; padding: 0;
+      display: flex; flex-direction: column;
+      align-items: center;
+    }
+    h1 { margin-top: 20px; color: #333; }
+    #chat {
+      width: 90%;
+      max-width: 600px;
+      background: white;
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.2);
+      overflow-y: auto;
+      height: 500px;
+      margin-bottom: 20px;
+    }
+    .message {
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 8px;
+    }
+    .user { background-color: #d0f0fd; text-align: right; }
+    .bot { background-color: #e1f5c4; text-align: left; }
+    #inputArea {
+      width: 90%;
+      max-width: 600px;
+      display: flex;
+      gap: 10px;
+    }
+    input {
+      flex: 1;
+      padding: 10px;
+      font-size: 16px;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      background: #4caf50;
+      color: white;
+      border: none;
+      cursor: pointer;
+      border-radius: 5px;
+    }
   </style>
 </head>
 <body>
-  <h2>🤖 MKS Local AI</h2>
-  <div id="chat"></div>
+
+<h1>🤖 MKS Hugging Face Chatbot</h1>
+
+<div id="chat"></div>
+
+<div id="inputArea">
   <input id="userInput" placeholder="Type a message..." />
   <button onclick="send()">Send</button>
+</div>
 
-  <script>
-    function fakeAIReply(msg) {
-      msg = msg.toLowerCase();
-      if (msg.includes("hi") || msg.includes("hello")) return "Hello! How can I help you?";
-      if (msg.includes("name")) return "My name is MKS AI 😎";
-      if (msg.includes("math")) return "Math is the language of the universe!";
-      if (msg.includes("bye")) return "Goodbye! Study well!";
-      return "Sorry, I didn't understand that. Try something else.";
-    }
+<script>
+  const chatBox = document.getElementById("chat");
+  const HF_API_TOKEN = "https://api-inference.huggingface.co/models/google/flan-t5-large"; // <--- Replace this
 
-    function send() {
-      const input = document.getElementById("userInput");
-      const userMsg = input.value;
-      if (!userMsg) return;
-      
-      const chat = document.getElementById("chat");
-      chat.innerHTML += `<div class='msg user'>${userMsg}</div>`;
-      
-      const botReply = fakeAIReply(userMsg);
-      setTimeout(() => {
-        chat.innerHTML += `<div class='msg bot'>${botReply}</div>`;
-      }, 500);
-      
-      input.value = "";
-    }
-  </script>
+  async function send() {
+    const input = document.getElementById("userInput");
+    const userMessage = input.value;
+    if (!userMessage) return;
+
+    // Add user message to chat
+    chatBox.innerHTML += `<div class="message user">${userMessage}</div>`;
+    chatBox.scrollTop = chatBox.scrollHeight;
+    input.value = "";
+
+    // Add loading message
+    chatBox.innerHTML += `<div class="message bot" id="loading">Typing...</div>`;
+    chatBox.scrollTop = chatBox.scrollHeight;
+
+    // Send to Hugging Face
+    const response = await fetch(
+      "https://api-inference.huggingface.co/models/google/flan-t5-large",  // You can change model here
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${HF_API_TOKEN}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ inputs: userMessage })
+      }
+    );
+
+    const data = await response.json();
+    document.getElementById("loading").remove();
+
+    const botReply = data[0]?.generated_text || "Sorry, I couldn't understand.";
+    chatBox.innerHTML += `<div class="message bot">${botReply}</div>`;
+    chatBox.scrollTop = chatBox.scrollHeight;
+  }
+</script>
+
 </body>
 </html>

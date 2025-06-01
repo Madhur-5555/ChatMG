@@ -1,106 +1,100 @@
-<!DOCTYPE html>
-<html>
+<!DOCTYPE html><html lang="en">
 <head>
-  <title>MKS Hugging Face Chatbot</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Madhur's AI Chatbot</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
-      background: linear-gradient(to right, #ffb347, #ffcc33);
-      margin: 0; padding: 0;
-      display: flex; flex-direction: column;
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, orange, yellow);
+      color: #333;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
       align-items: center;
+      height: 100vh;
     }
-    h1 { margin-top: 20px; color: #333; }
+    h1 {
+      background-color: #fff3cd;
+      color: #856404;
+      padding: 1rem 2rem;
+      border-radius: 10px;
+      margin-top: 1rem;
+      box-shadow: 0 0 10px rgba(0,0,0,0.2);
+    }
     #chat {
       width: 90%;
       max-width: 600px;
-      background: white;
+      height: 60vh;
+      background-color: white;
       border-radius: 10px;
-      padding: 20px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.2);
+      padding: 1rem;
       overflow-y: auto;
-      height: 500px;
-      margin-bottom: 20px;
+      margin: 1rem 0;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
     }
-    .message {
-      padding: 10px;
-      margin: 10px 0;
-      border-radius: 8px;
+    .user, .bot {
+      margin-bottom: 1rem;
+      padding: 0.5rem;
+      border-radius: 5px;
     }
-    .user { background-color: #d0f0fd; text-align: right; }
-    .bot { background-color: #e1f5c4; text-align: left; }
-    #inputArea {
-      width: 90%;
-      max-width: 600px;
-      display: flex;
-      gap: 10px;
+    .user {
+      background-color: #d1e7dd;
+    }
+    .bot {
+      background-color: #f8d7da;
     }
     input {
-      flex: 1;
-      padding: 10px;
-      font-size: 16px;
+      width: 80%;
+      padding: 0.5rem;
+      margin: 0.5rem;
+      border-radius: 5px;
+      border: 1px solid #ccc;
     }
     button {
-      padding: 10px 20px;
-      font-size: 16px;
-      background: #4caf50;
+      padding: 0.5rem 1rem;
+      background-color: #4CAF50;
       color: white;
       border: none;
-      cursor: pointer;
       border-radius: 5px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #45a049;
     }
   </style>
 </head>
 <body>
+  <h1>Madhur's AI Chatbot 🤖</h1>
+  <div id="chat"></div>
+  <input type="text" id="userInput" placeholder="Apna sawal likho...">
+  <button onclick="askBot()">Send</button>  <script>
+    const HF_API_TOKEN = ""; // <-- Yahan Hugging Face ka token daalo
 
-<h1>🤖 MKS Hugging Face Chatbot</h1>
+    async function askBot() {
+      const userMessage = document.getElementById("userInput").value;
+      if (!userMessage) return;
 
-<div id="chat"></div>
+      document.getElementById("chat").innerHTML += `<div class='user'>👤: ${userMessage}</div>`;
+      document.getElementById("userInput").value = "";
 
-<div id="inputArea">
-  <input id="userInput" placeholder="Type a message..." />
-  <button onclick="send()">Send</button>
-</div>
+      const response = await fetch(
+        "https://api-inference.huggingface.co/models/facebook/blenderbot-3B",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${HF_API_TOKEN}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ inputs: userMessage })
+        }
+      );
 
-<script>
-  const chatBox = document.getElementById("chat");
-  const HF_API_TOKEN = "https://api-inference.huggingface.co/models/google/flan-t5-large"; // <--- Replace this
+      const data = await response.json();
+      const botReply = data.generated_text || "Sorry, couldn't understand.";
 
-  async function send() {
-    const input = document.getElementById("userInput");
-    const userMessage = input.value;
-    if (!userMessage) return;
-
-    // Add user message to chat
-    chatBox.innerHTML += `<div class="message user">${userMessage}</div>`;
-    chatBox.scrollTop = chatBox.scrollHeight;
-    input.value = "";
-
-    // Add loading message
-    chatBox.innerHTML += `<div class="message bot" id="loading">Typing...</div>`;
-    chatBox.scrollTop = chatBox.scrollHeight;
-
-    // Send to Hugging Face
-    const response = await fetch(
-      "https://api-inference.huggingface.co/models/google/flan-t5-large",  // You can change model here
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${HF_API_TOKEN}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ inputs: userMessage })
-      }
-    );
-
-    const data = await response.json();
-    document.getElementById("loading").remove();
-
-    const botReply = data[0]?.generated_text || "Sorry, I couldn't understand.";
-    chatBox.innerHTML += `<div class="message bot">${botReply}</div>`;
-    chatBox.scrollTop = chatBox.scrollHeight;
-  }
-</script>
-
-</body>
+      document.getElementById("chat").innerHTML += `<div class='bot'>🤖: ${botReply}</div>`;
+    }
+  </script></body>
 </html>

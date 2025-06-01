@@ -80,7 +80,7 @@
       document.getElementById("userInput").value = "";
 
       const response = await fetch(
-        "https://api-inference.huggingface.co/models/facebook/blenderbot-3B",
+        "microsoft/DialoGPT-medium",
         {
           method: "POST",
           headers: {

@@ -70,7 +70,7 @@
   <div id="chat"></div>
   <input type="text" id="userInput" placeholder="Apna sawal likho...">
   <button onclick="askBot()">Send</button>  <script>
-    const HF_API_TOKEN = ""; // <-- Yahan Hugging Face ka token daalo
+    const HF_API_TOKEN = "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"; // <-- Yahan Hugging Face ka token daalo
 
     async function askBot() {
       const userMessage = document.getElementById("userInput").value;

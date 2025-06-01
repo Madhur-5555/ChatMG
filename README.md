@@ -1,100 +1,128 @@
-<!DOCTYPE html><html lang="en">
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Madhur's AI Chatbot</title>
+  <meta charset="UTF-8">
+  <title>AI Chatbot (Hugging Face)</title>
   <style>
     body {
-      font-family: 'Segoe UI', sans-serif;
-      background: linear-gradient(135deg, orange, yellow);
-      color: #333;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(to right, #ff9900, #ffff66);
       margin: 0;
       padding: 0;
       display: flex;
       flex-direction: column;
-      align-items: center;
       height: 100vh;
     }
     h1 {
-      background-color: #fff3cd;
-      color: #856404;
-      padding: 1rem 2rem;
-      border-radius: 10px;
-      margin-top: 1rem;
-      box-shadow: 0 0 10px rgba(0,0,0,0.2);
+      text-align: center;
+      background-color: #333;
+      color: white;
+      margin: 0;
+      padding: 1rem;
     }
     #chat {
-      width: 90%;
-      max-width: 600px;
-      height: 60vh;
-      background-color: white;
-      border-radius: 10px;
+      flex: 1;
       padding: 1rem;
       overflow-y: auto;
-      margin: 1rem 0;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      background: #f4f4f4;
     }
-    .user, .bot {
-      margin-bottom: 1rem;
+    .message {
       padding: 0.5rem;
-      border-radius: 5px;
+      margin: 0.5rem 0;
+      border-radius: 10px;
+      max-width: 70%;
     }
     .user {
-      background-color: #d1e7dd;
+      background-color: #d1ffd6;
+      align-self: flex-end;
+      text-align: right;
     }
     .bot {
-      background-color: #f8d7da;
+      background-color: #d6eaff;
+      align-self: flex-start;
+      text-align: left;
     }
-    input {
-      width: 80%;
+    #inputForm {
+      display: flex;
+      padding: 1rem;
+      background: #fff;
+    }
+    #input {
+      flex: 1;
       padding: 0.5rem;
-      margin: 0.5rem;
-      border-radius: 5px;
-      border: 1px solid #ccc;
+      font-size: 1rem;
     }
     button {
       padding: 0.5rem 1rem;
-      background-color: #4CAF50;
+      background-color: #333;
       color: white;
       border: none;
-      border-radius: 5px;
       cursor: pointer;
-    }
-    button:hover {
-      background-color: #45a049;
     }
   </style>
 </head>
 <body>
   <h1>Madhur's AI Chatbot 🤖</h1>
   <div id="chat"></div>
-  <input type="text" id="userInput" placeholder="Apna sawal likho...">
-  <button onclick="askBot()">Send</button>  <script>
-    const HF_API_TOKEN = "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"; // <-- Yahan Hugging Face ka token daalo
+  <form id="inputForm">
+    <input type="text" id="input" placeholder="Ask something..." required />
+    <button type="submit">Send</button>
+  </form>
 
-    async function askBot() {
-      const userMessage = document.getElementById("userInput").value;
+  <script>
+    const chat = document.getElementById("chat");
+    const inputForm = document.getElementById("inputForm");
+    const input = document.getElementById("input");
+
+    const HF_API_TOKEN = "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"; // <== Yahan token daalo
+    const MODEL = "facebook/blenderbot-3B"; // ya "microsoft/DialoGPT-medium"
+
+    inputForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const userMessage = input.value.trim();
       if (!userMessage) return;
 
-      document.getElementById("chat").innerHTML += `<div class='user'>👤: ${userMessage}</div>`;
-      document.getElementById("userInput").value = "";
+      addMessage(userMessage, "user");
+      input.value = "";
 
-      const response = await fetch(
-        "microsoft/DialoGPT-medium",
-        {
+      addMessage("Typing...", "bot");
+      const botResponse = await queryModel(userMessage);
+      chat.lastChild.textContent = botResponse;
+    });
+
+    function addMessage(text, sender) {
+      const message = document.createElement("div");
+      message.classList.add("message", sender);
+      message.textContent = text;
+      chat.appendChild(message);
+      chat.scrollTop = chat.scrollHeight;
+    }
+
+    async function queryModel(prompt) {
+      try {
+        const response = await fetch(`https://api-inference.huggingface.co/models/${MODEL}`, {
           method: "POST",
           headers: {
             Authorization: `Bearer ${HF_API_TOKEN}`,
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
           },
-          body: JSON.stringify({ inputs: userMessage })
+          body: JSON.stringify({ inputs: prompt }),
+        });
+
+        const result = await response.json();
+        if (result.generated_text) {
+          return result.generated_text;
+        } else if (result[0]?.generated_text) {
+          return result[0].generated_text;
+        } else if (result.error) {
+          return "⚠️ Error: " + result.error;
+        } else {
+          return "❌ Sorry, no response.";
         }
-      );
-
-      const data = await response.json();
-      const botReply = data.generated_text || "Sorry, couldn't understand.";
-
-      document.getElementById("chat").innerHTML += `<div class='bot'>🤖: ${botReply}</div>`;
+      } catch (error) {
+        return "⚠️ Connection failed.";
+      }
     }
-  </script></body>
+  </script>
+</body>
 </html>
